@@ -1,0 +1,14 @@
+[
+  {
+    "userID": "1",
+    "userType": "valid_user_credentials",
+    "userName": "tomsmith",
+    "userPassword": "SuperSecretPassword!"
+  },
+  {
+    "userID": "2",
+    "userType": "invalid_user_credentials",
+    "userName": "foobar",
+    "userPassword": "barfoo"
+  }
+]

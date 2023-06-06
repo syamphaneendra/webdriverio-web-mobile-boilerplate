@@ -1,0 +1,29 @@
+image:
+  name: syamphaneendra/node-chrome:node20-chrome113
+
+variables:
+  CUCUMBER_REPORT_DIR: '$CI_PROJECT_DIR/report'
+  CUCUMBER_HTML_REPORT_DIR: '$CI_PROJECT_DIR/report/cucumber-html-report/'
+  PROJECT_FEATURES_FOLDER: '$CI_PROJECT_DIR/tests/features'
+
+stages:
+  - test
+
+e2e:chrome:
+  stage: test
+  script:
+    - echo "Enetered to the script execution"
+    - npm install --force
+    - |
+      npm run wdio-docker
+      echo "run status:" $?
+  after_script:
+    - echo "Zip the cucumber reports"
+    - zip -r -j $CUCUMBER_REPORT_DIR/cucumber-json-reports.zip $CUCUMBER_REPORT_DIR/*.json
+  artifacts:
+    when: always
+    paths:
+      - $PROJECT_FEATURES_FOLDER
+      - $CUCUMBER_REPORT_DIR
+    expire_in: 1 week
+  allow_failure: true

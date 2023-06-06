@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "node",
+    "module": "ESNext",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node", "@wdio/globals/types", "expect-webdriverio", "@wdio/cucumber-framework", "@wdio/shared-store-service"],
+    "target": "es2022"
+  }
+}

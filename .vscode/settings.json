@@ -1,0 +1,11 @@
+{
+  "cucumberautocomplete.steps": ["tests/step-definitions/*.ts"],
+  "cucumberautocomplete.syncfeatures": "tests/features/*/*.feature",
+  "cucumberautocomplete.strictGherkinCompletion": true,
+  "cucumberautocomplete.strictGherkinValidation": true,
+  "cucumberautocomplete.smartSnippets": true,
+  "cucumberautocomplete.stepsInvariants": true,
+  "cucumberautocomplete.pages": {
+    "pages": "test/pageobjects/*.ts"
+  }
+}
