@@ -47,5 +47,8 @@
     "wdio-a11y": "wdio run ./wdio.conf.ts --cucumberOpts.tagExpression='@a11y' --Env=dev --firefox",
     "wdio-visual": "wdio run ./wdio.conf.ts --cucumberOpts.tagExpression='@visual' --Env=dev --firefox --applitools",
     "prettier-format": "prettier --config .prettierrc tests/**/*.{ts,tsx} --write "
+  },
+  "dependencies": {
+    "winston": "^3.12.0"
   }
 }

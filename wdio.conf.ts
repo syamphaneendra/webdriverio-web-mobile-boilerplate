@@ -10,6 +10,7 @@ import cucumberJson from 'wdio-cucumberjs-json-reporter';
 import * as ContextKeys from './tests/context/context.keys.ts';
 import * as Constants from './tests/utils/constants.utils.ts';
 import { remote } from 'webdriverio';
+import logger from './tests/utils/logger.utils.ts'; 
 import {
   Eyes,
   ClassicRunner,
@@ -269,6 +270,7 @@ export const config: Options.Testrunner = Object.assign(
      * @param {Array.<Object>} capabilities list of capabilities details
      */
     onPrepare: async function (config: object, capabilities: Array<object>) {
+      logger.info('Starting the test suite.');
       // Remove the `.report/` folder that holds the json and report files
       removeSync(`${process.cwd()}/report`);
     },
@@ -387,6 +389,7 @@ export const config: Options.Testrunner = Object.assign(
       //Applittols logic
       global.scenarioName = world.pickle.name;
       if (isApplitools) {
+        logger.info('Invoking applitools...');
         // Set up Execution Cloud if it will be used.
         if (Constants.USE_EXECUTION_CLOUD) {
           const executionCloudUrl = new URL(await Eyes.getExecutionCloudUrl());

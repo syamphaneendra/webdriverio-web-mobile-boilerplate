@@ -6,13 +6,14 @@ import UserDataService from '../services/userdata.service.ts';
 import { Users } from '../types/Users.ts';
 import * as ContextKeys from '../context/context.keys.ts';
 import { setValue, getValue } from '@wdio/shared-store-service';
+import logger from '../utils/logger.utils.ts'
 
 Given(/^I am on the (\w+) page$/, async (page) => {
   await DemoLoginPage.open();
 });
 
 When(/^I login to the application with (\w+)$/, async (userType) => {
-  console.log('userdata: ' + (await UserDataService.getUserByType(userType)).userName);
+  logger.info('userdata: ' + (await UserDataService.getUserByType(userType)).userName);
   const loggedInUser: Users = await UserDataService.getUserByType(userType);
   await setValue(ContextKeys.LOGGED_IN_USER, loggedInUser);
   await DemoLoginPage.login(loggedInUser.userName, loggedInUser.userPassword);
