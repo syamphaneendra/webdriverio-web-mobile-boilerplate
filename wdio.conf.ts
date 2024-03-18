@@ -8,6 +8,22 @@ import pkg from 'multiple-cucumber-html-reporter';
 const { generate } = pkg;
 import cucumberJson from 'wdio-cucumberjs-json-reporter';
 import * as ContextKeys from './tests/context/context.keys.ts';
+import * as Constants from './tests/utils/constants.utils.ts';
+import { remote } from 'webdriverio';
+import {
+  Eyes,
+  ClassicRunner,
+  VisualGridRunner,
+  RunnerOptions,
+  Target,
+  RectangleSize,
+  Configuration,
+  BatchInfo,
+  BrowserType,
+  ScreenOrientation,
+  DeviceName,
+  RunnerOptionsFluent
+} from '@applitools/eyes-webdriverio';
 
 // Logic to find the runtime argument browser name
 const firefox = process.argv.includes('--firefox') ? 'FIREFOX' : '';
@@ -22,6 +38,8 @@ const browserstack = process.argv.includes('--browserstack') ? 'BROWSERSTACK' : 
 const saucelabs = process.argv.includes('--saucelabs') ? 'SAUCELABS' : '';
 const serviceType = firefox || edge || docker || selenoid || crossbrowser || safari || standalone || appium || browserstack || saucelabs || 'CHROME';
 console.log('Service type: ' + serviceType);
+const isApplitools = process.argv.includes('--applitools') ? true : false;
+console.log('isApplitools: ' + isApplitools);
 const dynamicConfig = await import(`./config/wdio.${serviceType}.conf.ts`);
 //console.log('dynamicConfig: ' + JSON.stringify(dynamicConfig));
 
@@ -282,8 +300,52 @@ export const config: Options.Testrunner = Object.assign(
      * @param {Array.<String>} specs List of spec file paths that are to be run
      * @param {String} cid worker id (e.g. 0-0)
      */
-    // beforeSession: function (config, capabilities, specs, cid) {
-    // },
+    beforeSession: async function (config, capabilities, specs, cid) {
+      //Applittols logic
+      let runner, batchInfo;
+      if (isApplitools) {
+        if (Constants.USE_ULTRAFAST_GRID) {
+          // Create the runner for the Ultrafast Grid.
+          // Concurrency refers to the number of visual checkpoints Applitools will perform in parallel.
+          // Warning: If you have a free account, then concurrency will be limited to 1.
+          runner = new VisualGridRunner(new RunnerOptionsFluent().testConcurrency(5));
+        } else {
+          // Create the classic runner.
+          runner = new ClassicRunner();
+        }
+        const eyes = new Eyes(runner);
+
+        const runnerName = Constants.USE_ULTRAFAST_GRID ? Constants.RUNNER_NAME_ULTRAGRID : Constants.RUNNER_NAME_CLASSIC;
+        batchInfo = new BatchInfo(`Idenity WebdriverIO framework with the ${runnerName}`);
+
+        batchInfo.setSequenceName(Constants.BATCH_INFO_SEQUENCE_NAME);
+        const configuration = new Configuration();
+        configuration.setBatch(batchInfo);
+        configuration.setAppName(Constants.CONF_APPNAME);
+        //configuration.setTestName('AppliTools Sample: Login');
+        configuration.setApiKey(Constants.APPLITOOLS_API_KEY);
+        configuration.setServerUrl(Constants.APPLITOOLS_SERVER_URL);
+
+        if (Constants.USE_ULTRAFAST_GRID) {
+          // Add 3 desktop browsers with different viewports for cross-browser testing in the Ultrafast Grid.
+          // Other browsers are also available, like Edge and IE.
+          configuration.addBrowser(800, 600, BrowserType.CHROME);
+          configuration.addBrowser(1600, 1200, BrowserType.FIREFOX);
+          configuration.addBrowser(1024, 768, BrowserType.SAFARI);
+
+          // Add 2 mobile emulation devices with different orientations for cross-browser testing in the Ultrafast Grid.
+          // Other mobile devices are available, including iOS.
+          configuration.addDeviceEmulation(DeviceName.Pixel_2, ScreenOrientation.PORTRAIT);
+          configuration.addDeviceEmulation(DeviceName.Nexus_10, ScreenOrientation.LANDSCAPE);
+        }
+
+        eyes.setConfiguration(configuration);
+
+        global.eyes = eyes;
+        global.Target = Target;
+        global.runner = runner;
+      }
+    },
     /**
      * Gets executed before test execution begins. At this point you can access to all global
      * variables like `browser`. It is the perfect place to define custom commands.
@@ -321,6 +383,46 @@ export const config: Options.Testrunner = Object.assign(
       // and not reloading session when it's not needed(when session is new already during the first test run)
       if (browser.sessionId == lastSession) {
         await browser.reloadSession();
+      }
+      //Applittols logic
+      global.scenarioName = world.pickle.name;
+      if (isApplitools) {
+        // Set up Execution Cloud if it will be used.
+        if (Constants.USE_EXECUTION_CLOUD) {
+          const executionCloudUrl = new URL(await Eyes.getExecutionCloudUrl());
+          const protocol_val = executionCloudUrl.protocol.substring(0, executionCloudUrl.protocol.length - 1);
+          browser = await remote({
+            logLevel: 'trace',
+            protocol: protocol_val,
+            hostname: executionCloudUrl.hostname,
+            port: Number(executionCloudUrl.port),
+            capabilities: {
+              browserName: 'chrome'
+            }
+          });
+        }
+        console.log('Opening Applitools eyes......');
+        // Open Eyes to start visual testing.
+        // It is a recommended practice to set all four inputs:
+        browser = await global.eyes.open(
+          // WebDriver object to "watch".
+          browser,
+
+          // The name of the application under test.
+          // All tests for the same app should share the same app name.
+          // Set this name wisely: Applitools features rely on a shared app name across tests.
+          'Demo',
+
+          // The name of the test case for the given application.
+          // Additional unique characteristics of the test may also be specified as part of the test name,
+          // such as localization information ("Home Page - EN") or different user permissions ("Login by admin").
+          world.pickle.name
+
+          // The viewport size for the local browser.
+          // Eyes will resize the web browser to match the requested viewport size.
+          // This parameter is optional but encouraged in order to produce consistent results.
+          //new RectangleSize(1200, 858)
+        );
       }
     },
     /**
@@ -361,6 +463,11 @@ export const config: Options.Testrunner = Object.assign(
     afterScenario: async function (world, result, context) {
       console.log('scenario status: ' + world.result.status);
       await browser.reloadSession();
+      //Applitools logic
+      if (isApplitools) {
+        // Close Eyes to tell the server it should display the results.
+        await global.eyes.closeAsync();
+      }
     },
     /**
      *
@@ -387,8 +494,15 @@ export const config: Options.Testrunner = Object.assign(
      * @param {Array.<Object>} capabilities list of capabilities details
      * @param {Array.<String>} specs List of spec file paths that ran
      */
-    // after: function (result, capabilities, specs) {
-    // },
+    after: async function (result, capabilities, specs) {
+      //Applitools logic
+      if (isApplitools) {
+        // Close the batch and report visual differences to the console.
+        // Note that it forces Mocha to wait synchronously for all visual checkpoints to complete.
+        const allTestResults = await global.runner.getAllTestResults();
+        console.log(allTestResults);
+      }
+    },
     /**
      * Gets executed right after terminating the webdriver session.
      * @param {Object} config wdio configuration object

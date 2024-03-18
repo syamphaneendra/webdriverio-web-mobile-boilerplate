@@ -32,12 +32,22 @@ This boilerplate project has WebdriverIO 8 tests with cucumber and typescript, f
 - Gitlab pipelines for Gitlab repository
 - Github actions for Github repository
 - Docker compose for setting up the docker hub
+- Accessibility testing using AXE
+- Visual testing using Applitools
 
 ## Test execution:
 
 - Checkout the codebase
 - Install the packages using npm install
 - Run the tests by using npm run wdio-\* (local/chrome/docker/appium/.......) Please refer the package.json scripts.
+
+## Accessibility testing:
+- npm run wdio-ally
+- Report will be generated in artifacts directory
+
+## Visual testing:
+- npm run wdio-visual
+- Require the applitool licence and either export the Key as an environment variable or update directly in the code, constant file
 
 ## Points to consider:
 
