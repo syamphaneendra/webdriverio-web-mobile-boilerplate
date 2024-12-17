@@ -318,7 +318,7 @@ export const config: Options.Testrunner = Object.assign(
         const eyes = new Eyes(runner);
 
         const runnerName = Constants.USE_ULTRAFAST_GRID ? Constants.RUNNER_NAME_ULTRAGRID : Constants.RUNNER_NAME_CLASSIC;
-        batchInfo = new BatchInfo(`Idenity WebdriverIO framework with the ${runnerName}`);
+        batchInfo = new BatchInfo(`WebdriverIO framework with the ${runnerName}`);
 
         batchInfo.setSequenceName(Constants.BATCH_INFO_SEQUENCE_NAME);
         const configuration = new Configuration();
@@ -383,7 +383,7 @@ export const config: Options.Testrunner = Object.assign(
       // the below if statement is cleaning the browser session only when it's the same as previous scenario's session
       // this is needed so we are spawning a new session for each scenario
       // and not reloading session when it's not needed(when session is new already during the first test run)
-      if (browser.sessionId == lastSession) {
+            if (browser.sessionId == lastSession) {
         await browser.reloadSession();
       }
       //Applittols logic
@@ -407,7 +407,7 @@ export const config: Options.Testrunner = Object.assign(
         console.log('Opening Applitools eyes......');
         // Open Eyes to start visual testing.
         // It is a recommended practice to set all four inputs:
-        browser = await global.eyes.open(
+        await global.eyes.open(
           // WebDriver object to "watch".
           browser,
 
